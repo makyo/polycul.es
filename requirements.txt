@@ -17,4 +17,4 @@ pycodestyle==2.4.0
 pycparser==2.19
 pyflakes==2.0.0
 six==1.12.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
