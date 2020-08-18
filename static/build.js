@@ -1,38 +1,176 @@
 'use strict';
 
+function resetMenus() {
+  d3.select('#node-menu').style('display', 'none');
+  d3.select('#link-menu').style('display', 'none');
+}
+
+function closeEditMenu() {
+  selected_link = null;
+  selected_node = null;
+  editing = false;
+  resetMenus();
+}
+
+function linkName(link) {
+  return `[${link.source.name}]->[${link.target.name}]`;
+}
+
+function changeElement(target_list, target_element, f) {
+  var elements = target_list.filter(function (element) {
+    return element === target_element;
+  });
+
+  if (elements.length === 1) {
+    f(elements[0]);
+  }
+
+  startGraphAnimation();
+  return elements.length === 1;
+}
+
+function changeNode(target_node, f) {
+  var success = changeElement(window.graph.nodes, target_node, f)
+  if (!success) {
+    console.log(`Failed to find node ${target_node.name}!`);
+  }
+}
+
+function changeLink(target_link, f) {
+  var success = changeElement(window.graph.links, target_link, f)
+  if (!success) {
+    console.log(`Failed to find link ${linkName(target_link)}!`);
+  }
+}
+
+function editNode(d) {
+  d3.select('#link-menu').style('display', 'none');
+  var nodeMenu = d3.select('#node-menu');
+  nodeMenu.style('display', 'block');
+  document.getElementById('edit-node-name').value = d.name;
+  nodeMenu.select('#edit-node-name')
+    .on('keyup', function () {
+      changeNode(d, (n) => n.name = this.value);
+    });
+  document.getElementById('edit-node-r').value = d.r;
+  nodeMenu.select('#edit-node-r')
+    .on('input', function () {
+      changeNode(d, (n) => n.r = this.value);
+    });
+  document.getElementById('edit-node-dashed').checked = d.dashed;
+  nodeMenu.select('#edit-node-dashed')
+    .on('change', function () {
+      changeNode(d, (n) => n.dashed = d3.select(this).property('checked'));
+    });
+  nodeMenu.select('#delete-node')
+    .on('click', function () {
+      if (selected_node) {
+        window.graph.nodes
+          .splice(window.graph.nodes.indexOf(selected_node), 1);
+        spliceLinksForNode(selected_node);
+      }
+      closeEditMenu();
+      startGraphAnimation();
+    });
+}
+
+function editLink(d) {
+  d3.select('#node-menu').style('display', 'none');
+  var linkMenu = d3.select('#link-menu');
+  linkMenu.style('display', 'block');
+  linkMenu.select('#link-name').text(linkName(d));
+  linkMenu.select('#source-name').text(d.source.name);
+  linkMenu.select('#target-name').text(d.target.name);
+  linkMenu.select('#edit-center-text')
+    .attr('value', d.centerText ? d.centerText : '')
+    .on('keyup', function () {
+      changeLink(d, (l) => l.centerText = this.value);
+    });
+  linkMenu.select('#edit-source-text')
+    .attr('value', d.sourceText ? d.sourceText : '')
+    .on('keyup', function () {
+      changeLink(d, (l) => l.sourceText = this.value);
+    });
+  linkMenu.select('#edit-target-text')
+    .attr('value', d.targetText ? d.targetText : '')
+    .on('keyup', function () {
+      changeLink(d, (l) => l.targetText = this.value);
+    });
+  linkMenu.select('#edit-strength')
+    .attr('value', d.strength)
+    .on('input', function () {
+      changeLink(d, (l) => l.strength = this.value);
+    });
+  linkMenu.select('#edit-link-dashed')
+    .property('checked', d.dashed)
+    .on('change', function () {
+      changeLink(d, (l) => l.dashed = d3.select(this).property('checked'));
+    });
+  linkMenu.select('#delete-link')
+    .on('click', function () {
+      if (selected_link) {
+        window.graph.links
+          .splice(window.graph.links.indexOf(selected_link), 1);
+      }
+      closeEditMenu();
+      startGraphAnimation();
+    });
+}
+
+function selectElement(target) {
+  if (target === selected_link || target === selected_node) {
+    // de-select
+    closeEditMenu();
+    return;
+  }
+
+  editing = true;
+  if ('name' in target) { // selecting a node
+    selected_link = null;
+    selected_node = target;
+    editNode(target);
+  } else {
+    selected_link = target;
+    selected_node = null;
+    editLink(target);
+  }
+}
+
 function attachEvents() {
   node
-    .on('mouseover', function(d) {
-      if (!mousedown_node || d === mousedown_node) {
-        return;
+    .on('mouseover', function (d) {
+      // enlarge target node for link
+      if (mousedown_node) {
+        if (d === mousedown_node) {
+          return;
+        }
+        d3.select(this)
+          .attr('transform', d3.select(this).attr('transform') + ' scale(1.1)');
       }
-      // enlarge target node
-      d3.select(this)
-        .attr('transform', d3.select(this).attr('transform') + ' scale(1.1)');
+
     })
-    .on('mouseout', function(d) {
-      if (!mousedown_node || d === mousedown_node) {
-        return;
+    .on('mouseout', function (d) {
+      if (mousedown_node) {
+        if (d === mousedown_node) {
+          return;
+        }
+        // unenlarge target node for link
+        d3.select(this)
+          .attr('transform',
+            d3.select(this).attr('transform').replace(' scale(1.1)', ''));
       }
-      // unenlarge target node
-      d3.select(this)
-        .attr('transform',
-          d3.select(this).attr('transform').replace(' scale(1.1)', ''));
     })
-    .on('mousedown', function(d) {
+    .on('mousedown', function (d) {
       if (d3.event.ctrlKey) {
         return;
       }
 
-      // select node
+      // save mousedown_node for later handling on mouseup and
       mousedown_node = d;
-      if (mousedown_node === selected_node) {
-        selected_node = null;
-      }
-      else selected_node = mousedown_node;
-      selected_link = null;
 
-      // reposition drag line
+      // stop graph moving while we are dragging
+      stopGraphAnimation();
+      // reset drag line to be centered on mousedown_node
       drag_line
         .classed('hidden', false)
         .attr({
@@ -42,10 +180,10 @@ function attachEvents() {
           'y2': mousedown_node.y
         });
 
-      restart();
-      attachEvents()
+      // restart();
+      // attachEvents()
     })
-    .on('mouseup', function(d) {
+    .on('mouseup', function (d) {
       if (!mousedown_node) {
         return;
       }
@@ -55,50 +193,39 @@ function attachEvents() {
         .classed('hidden', true)
         .style('marker-end', '');
 
-      // check for drag-to-self
-      mouseup_node = d;
-      if (mouseup_node === mousedown_node) {
-        editing = true;
-        editNode(d);
-        resetMouseVars();
-        return;
+      // are we making a new link or clicking on a new node?
+      if (d === mousedown_node) {
+        // we clicked on a node to edit it
+        selectElement(d);
+      } else {
+        // shrink down the node we just moused over
+        d3.select(this).attr('transform', '');
+        // NB: links are strictly source < target; arrows separately specified by booleans
+        // create and then select new link
+        selectElement(addLink(mousedown_node, d));
       }
 
-      // unenlarge target node
-      d3.select(this).attr('transform', '');
-
-      // add link to graph (update if exists)
-      // NB: links are strictly source < target; arrows separately specified by booleans
-      var source, target,
-          source = mousedown_node;
-          target = mouseup_node;
-
-      var link = addLink(source, target)
-
-      // select new link
-      selected_link = link;
-      selected_node = null;
-      restart();
-      attachEvents();
+      resetMouseVars();
+      startGraphAnimation();
     });
 
   path
-    .on('mousedown', function(d) {
+    .on('mousedown', function (l) {
       if (d3.event.ctrlKey) {
         return;
       }
 
       // select link
-      mousedown_link = d;
-      if (mousedown_link === selected_link) {
-        selected_link = null;
-      } else {
-        selected_link = mousedown_link;
-      }
-      selected_node = null;
-      editLink(d);
+      selectElement(l);
       resetMouseVars();
-      restart();
+    })
+    .on('mouseover', function (l) {
+      console.log(`mouseover${linkName(l)}`);
+      mouse_over_link = true;
+    })
+    .on('mouseout', function (l) {
+      console.log(`mouseout${linkName(l)}`);
+      mouse_over_link = false;
     });
 }
 
@@ -108,20 +235,17 @@ function resetMouseVars() {
   mousedown_link = null;
 }
 
-function resetMenus() {
-  d3.select('#node-menu').style('display', 'none');
-  d3.select('#link-menu').style('display', 'none');
-}
+
 
 function writeGraph() {
   d3.select('#graph-field').html(JSON.stringify(window.graph));
 }
 
 function spliceLinksForNode(node) {
-  var toSplice = window.graph.links.filter(function(l) {
+  var toSplice = window.graph.links.filter(function (l) {
     return (l.source === node || l.target === node);
   });
-  toSplice.map(function(l) {
+  toSplice.map(function (l) {
     window.graph.links.splice(window.graph.links.indexOf(l), 1);
   });
 }
@@ -133,16 +257,15 @@ function mousedown() {
   // because :active only works in WebKit?
   svg.classed('active', true);
 
-  if (d3.event.ctrlKey || d3.event.target.nodeName !== 'svg') {
+  if (d3.event.ctrlKey || d3.event.target.nodeName !== 'svg' || mouse_over_link) {
     return;
   }
 
   // insert new node at point
   var point = d3.mouse(this)
-  addNode(point);
+  selectElement(addNode(point));
 
-  restart();
-  attachEvents();
+  startGraphAnimation();
 }
 
 function addNode(point) {
@@ -158,25 +281,36 @@ function addNode(point) {
     newNode.y = point[1];
   }
   window.graph.nodes.push(newNode);
+
+  indexNodesAndLinks();
+  attachEvents();
   return newNode;
 }
 
 function addLink(source, target) {
-  var link = window.graph.links.filter(function(l) {
+  console.log(`addLink(${source.name}, ${target.name})`)
+  var link = window.graph.links.filter(function (l) {
     return (l.source === source && l.target === target) ||
       (l.source === target && l.target === source);
   })[0];
 
-  if (link) {
-    return link;
-  } else {
+  if (!link) {
     link = {
       source: source,
       target: target,
-      strength: 10
+      strength: 10,
+      dashed: false,
+      targetText: "",
+      sourceText: "",
+      centerText: ""
     };
     window.graph.links.push(link);
+
+    indexNodesAndLinks();
+    attachEvents();
   }
+
+  return link;
 }
 
 function mousemove() {
@@ -193,9 +327,6 @@ function mousemove() {
       'x2': point[0],
       'y2': point[1]
     });
-
-  attachEvents();
-  restart();
 }
 
 function mouseup() {
@@ -214,6 +345,7 @@ function mouseup() {
 
   // clear mouse event vars
   resetMouseVars();
+  startGraphAnimation();
 }
 
 // only respond once per keydown
@@ -226,7 +358,7 @@ function keydown() {
   lastKeyDown = d3.event.keyCode;
 
   // ctrl
-  if(d3.event.keyCode === 17) {
+  if (d3.event.keyCode === 17) {
     node.call(force.drag);
     svg.classed('ctrl', true);
   }
@@ -244,123 +376,21 @@ function keyup() {
   }
 }
 
-function editNode(d) {
-  d3.select('#link-menu').style('display', 'none');
-  var nodeMenu = d3.select('#node-menu');
-  nodeMenu.style('display', 'block');
-  document.getElementById('edit-node-name').value = d.name;
-  nodeMenu.select('#edit-node-name')
-    .on('keyup', function() {
-      window.graph.nodes.filter(function(node) {
-        return node === d;
-      })[0].name = this.value;
-      restart();
-    });
-  document.getElementById('edit-node-r').value = d.r;
-  nodeMenu.select('#edit-node-r')
-    .on('input', function() {
-      window.graph.nodes.filter(function(node) {
-        return node.id === d.id;
-      })[0].r = this.value;
-      restart();
-    });
-  document.getElementById('edit-node-dashed').checked = d.dashed;
-  nodeMenu.select('#edit-node-dashed')
-    .on('change', function() {
-      window.graph.nodes.filter(function(link) {
-        return link === d;
-      })[0].dashed = d3.select(this).property('checked');
-      restart();
-    });
-  nodeMenu.select('#delete-node')
-    .on('click', function() {
-      if (selected_node) {
-        window.graph.nodes
-          .splice(window.graph.nodes.indexOf(selected_node), 1);
-        spliceLinksForNode(selected_node);
-      }
-      selected_link = null;
-      selected_node = null;
-      restart();
-      attachEvents();
-      nodeMenu.style('display', 'none');
-    });
-}
-
-function editLink(d) {
-  d3.select('#node-menu').style('display', 'none');
-  var linkMenu = d3.select('#link-menu');
-  linkMenu.style('display', 'block');
-  linkMenu.select('#source-name').text(d.source.name);
-  linkMenu.select('#target-name').text(d.target.name);
-  linkMenu.select('#edit-center-text')
-    .attr('value', d.centerText ? d.centerText : '')
-    .on('keyup', function() {
-      window.graph.links.filter(function(link) {
-        return link === d;
-      })[0].centerText = this.value;
-      restart();
-    });
-  linkMenu.select('#edit-source-text')
-    .attr('value', d.sourceText ? d.sourceText : '')
-    .on('keyup', function() {
-      window.graph.links.filter(function(link) {
-        return link === d;
-      })[0].sourceText = this.value;
-      restart();
-    });
-  linkMenu.select('#edit-target-text')
-    .attr('value', d.targetText ? d.targetText : '')
-    .on('keyup', function() {
-      window.graph.links.filter(function(link) {
-        return link === d;
-      })[0].targetText = this.value;
-      restart();
-    });
-  linkMenu.select('#edit-strength')
-    .attr('value', d.strength)
-    .on('input', function() {
-      window.graph.links.filter(function(link) {
-        return link === d;
-      })[0].strength = this.value;
-      restart();
-    });
-  linkMenu.select('#edit-link-dashed')
-    .property('checked', d.dashed)
-    .on('change', function() {
-      window.graph.links.filter(function(link) {
-        return link === d;
-      })[0].dashed = d3.select(this).property('checked');
-      restart();
-    });
-  linkMenu.select('#delete-link')
-    .on('click', function() {
-      if (selected_link) {
-        window.graph.links
-          .splice(window.graph.links.indexOf(selected_link), 1);
-      }
-      selected_link = null;
-      selected_node = null;
-      restart();
-      attachEvents();
-      linkMenu.style('display', 'none');
-    });
-}
 
 function addTemplate(template) {
   var parts = template.split(';');
   var nodes = parts[0].split(',');
   var links = parts[1].split(',');
   var builtNodes = {};
-  nodes.forEach(function(d) {
+  nodes.forEach(function (d) {
     builtNodes[d] = addNode(null);
   });
-  links.forEach(function(d) {
+  links.forEach(function (d) {
     var linkParts = d.split('-');
     addLink(builtNodes[linkParts[0]], builtNodes[linkParts[1]]);
   })
 
-  restart();
+  startGraphAnimation();
   attachEvents();
 }
 
@@ -370,8 +400,9 @@ panel.on('mousedown', mousedown)
 d3.select(window)
   .on('keydown', keydown)
   .on('keyup', keyup);
-d3.select('.expand-help').on('click', function(e) {
+d3.select('.expand-help').on('click', function (e) {
   d3.event.preventDefault();
   var body = d3.select('.instructions .body');
   body.classed('hidden', !body.classed('hidden'));
 });
+attachEvents();
