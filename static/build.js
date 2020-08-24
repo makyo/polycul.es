@@ -325,6 +325,5 @@ d3.select('.expand-help').on('click', function (e) {
   body.classed('hidden', !body.classed('hidden'));
 });
 
-console.log(`Calling base start`);
 // call again, which will disable dragging behavior
 startGraphAnimation();

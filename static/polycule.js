@@ -58,7 +58,6 @@ class Node extends D3EventObject {
     } else {
       delete this.scale;
     }
-    console.log(`${this}.setScale(${amount}) -> ${this.scale}`);
   }
 
   // Draw Functions
@@ -417,11 +416,9 @@ function loadLink(json) {
   return style_repaint_on_set(link);
 }
 
-console.log(`loading graph items`);
 window.graph.nodes = window.graph.nodes.map(loadNode);
 window.graph.links = window.graph.links.map(loadLink);
 
-console.log(`creating force - full_repaint:${full_repaint}`);
 // init D3 force layout
 var force = d3.layout.force()
   .nodes(window.graph.nodes)
@@ -440,7 +437,6 @@ var path = svg.append('g').selectAll('.link'),
   node = svg.append('g').selectAll('.node');
 
 function startGraphAnimation() {
-  console.log('startGraphAnimation');
   // rebuild nodes and links
   trigger_full_repaint();
   // don't wait 
@@ -489,6 +485,5 @@ function panzoom() {
 d3.select(window)
   .on('keydown', panzoom);
 
-console.log(`Calling base start`);
 // app starts here
 startGraphAnimation();
