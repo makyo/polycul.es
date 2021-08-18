@@ -50,18 +50,16 @@ def migrate():
         for filename in sorted(os.listdir(migrations_dir)):
             if filename[-3:] != "sql":
                 continue
-            migration_number = int(filename[:3])
+            migration_number = int(filename.split("-", 1)[0])
             if migration_number <= current_migration:
                 print("migration {} already applied".format(migration_number))
                 continue
-            with open(os.path.join(migrations_dir, filename), "rb") as f:
+            with open(os.path.join(migrations_dir, filename), "r") as f:
                 try:
                     db.cursor().executescript(f.read())
                 except Exception as e:
                     print("Got {} - maybe already applied?".format(e))
-                finally:
-                    pass
-            if filename[:3] == "003":
+            if migration_number == 3:
                 hashify.migrate(db)
 
 
