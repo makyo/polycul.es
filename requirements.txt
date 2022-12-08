@@ -3,7 +3,7 @@ attrs==19.3.0
 bcrypt==3.1.7
 black==19.10b0
 CacheControl==0.12.6
-certifi==2019.11.28
+certifi==2022.12.7
 cffi==1.14.2
 chardet==3.0.4
 click==7.1.2
