@@ -151,7 +151,7 @@ def inherit_polycule(polycule_id):
         return render_template("view_auth.jinja2")
     if polycule is None:
         return render_template("error.jinja2", error="Polycule not found :(")
-    return render_template("create_polycule.jinja2", inherited=polycule.graph)
+    return render_template("edit_polycule.jinja2", inherited=polycule.graph, creating=True)
 
 
 @app.route("/create")
@@ -162,7 +162,7 @@ def create_polycule():
         "nodes": [],
         "links": []
     }"""
-    return render_template("create_polycule.jinja2", inherited=graph)
+    return render_template("edit_polycule.jinja2", inherited=graph, creating=True)
 
 
 @app.route("/edit/<polycule_id>", methods=["GET", "POST"])
@@ -182,7 +182,7 @@ def edit_polycule(polycule_id):
         )
     session["currently_editing"] = polycule_id
     return render_template(
-        "edit_polycule.jinja2", polycule_id=polycule_id, graph=polycule.graph
+        "edit_polycule.jinja2", polycule_id=polycule_id, graph=polycule.graph, creating=False
     )
 
 
