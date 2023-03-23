@@ -272,6 +272,14 @@ function editNode(d) {
       })[0].dashed = d3.select(this).property('checked');
       restart();
     });
+  document.getElementById('edit-node-color').value = d.color || "#888888";
+  nodeMenu.select('#edit-node-color')
+    .on('input', function() {
+      window.graph.nodes.filter(function(link) {
+        return link === d;
+      })[0].color = d3.select(this).property('value');
+      restart();
+    });
   nodeMenu.select('#delete-node')
     .on('click', function() {
       if (selected_node) {
@@ -323,6 +331,14 @@ function editLink(d) {
       window.graph.links.filter(function(link) {
         return link === d;
       })[0].strength = this.value;
+      restart();
+    });
+  linkMenu.select('#edit-link-color')
+    .property('value', d.color)
+    .on('input', function() {
+      window.graph.links.filter(function(link) {
+        return link === d;
+      })[0].color = d3.select(this).property('value');
       restart();
     });
   linkMenu.select('#edit-link-dashed')
