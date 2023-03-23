@@ -123,7 +123,7 @@
 <script src="/static/polycule.js" charset="utf-8"></script>
 <script src="/static/build.js" charset="utf-8"></script>
 
-<form action="{% if creating %}/save {% else %} /edit/save {% endif %}" method="post" class="wrapper flex" onsubmit="writeGraph();return true;">
+<form action="{% if creating %}/save{% else %}/edit/save{% endif %}" method="post" class="wrapper flex" onsubmit="writeGraph();return true;">
     <textarea name="graph" id="graph-field" class="hidden">{{ graph or inherited }}</textarea>
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
     <div class="form-group">
