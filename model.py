@@ -177,7 +177,7 @@ online at <https://polycul.es/{}>.
         parsed = json.loads(self.graph)
         for node in parsed["nodes"]:
             dot += '\tnode{id} [label="{label}"]\n'.format(
-                id=node["id"], label=node["name"].encode("utf-8").replace('"', '\\"')
+                id=node["id"], label=node["name"].replace('"', '\\"')
             )
         dot += "\n"
         for edge in parsed["links"]:
@@ -200,7 +200,7 @@ online at <https://polycul.es/{}>.
     def as_png_from_dot(self, edge_labels=False):
         source = tempfile.NamedTemporaryFile()
         dest = tempfile.NamedTemporaryFile()
-        source.write(self.as_dot(edge_labels=edge_labels))
+        source.write(self.as_dot(edge_labels=edge_labels).encode())
         source.flush()
         subprocess.check_call(["neato", "-Tpng", "-o", dest.name, source.name])
         png = dest.read()
