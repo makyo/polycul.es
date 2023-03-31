@@ -19,9 +19,9 @@ from migrations import hashify
 from model import Polycule
 
 # Config
-DATABASE = "dev.db"
+DATABASE = os.getenv('DATABASE', 'dev.db')
 DEBUG = True
-SECRET_KEY = "development key"
+SECRET_KEY = os.getenv('SECRET_KEY', 'SET ME PLEASE')
 
 # App initialization
 app = Flask(__name__)
@@ -309,7 +309,5 @@ def export_png(polycule_id):
 
 
 if __name__ == "__main__":
-    app.secret_key = os.getenv('SECRET_KEY', 'SET ME PLEASE')
-    app.config['DATABASE'] = os.getenv('DATABASE', 'dev.db')
     migrate()
     app.run()
