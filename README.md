@@ -14,5 +14,11 @@ You will need to install Python, virtualenv, and GraphViz using whatever package
 2. Run the application by running `make run` and opening http://localhost:5000/ in a browser
 3. Run the tests by running `make test`
 
+Alternatively, you can use Docker:
+
+1. Build and run the image by using `docker-compose up --detach`
+2. Alternatively, you can use development mode by using `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`
+
+
 ## License
 This project is licensed under the [MIT License](LICENSE).
