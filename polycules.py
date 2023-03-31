@@ -309,5 +309,7 @@ def export_png(polycule_id):
 
 
 if __name__ == "__main__":
+    app.secret_key = os.getenv('SECRET_KEY', 'SET ME PLEASE')
+    app.config['DATABASE'] = os.getenv('DATABASE', 'dev.db')
     migrate()
     app.run()
