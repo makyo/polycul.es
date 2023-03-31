@@ -8,9 +8,9 @@ COPY . .
 RUN apt-get update
 RUN apt-get install -y virtualenv graphviz
 
-# Build & expose portdon
+# Build & expose ports
 RUN make
 EXPOSE 5000
 
 # Run polycul.es
-CMD [ "make", "run" ]
+CMD [ "make", "gunicorn"]
