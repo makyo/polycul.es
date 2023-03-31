@@ -7,7 +7,7 @@
 {% block content %}
 <div id="graph" class="build">
     <svg id="panel"></svg>
-    <div id="panzoom">
+    <div id="panzoom" title="Pan/zoom data will be saved!">
         <small>Pan/zoom<br />Data<br />will be<br />saved!</small>
         <div id="in">+</div>
         <div id="pan">
@@ -31,6 +31,7 @@
     <div id="node-menu" class="menu">
         <p>Name: <input type="text" id="edit-node-name" /></p>
         <p>Radius: <input type="range" min="2" max="20" id="edit-node-r" /></p>
+        <p>Color: <input id="edit-node-color" type="color" /></p>
         <p>Dashed: <input id="edit-node-dashed" type="checkbox" /></p>
         <p>Delete: <button id="delete-node">Delete node</button></p>
     </div>
@@ -39,6 +40,7 @@
         <p>Text near <span id="source-name"></span>: <input type="text" id="edit-source-text" /></p>
         <p>Text near <span id="target-name"></span>: <input type="text" id="edit-target-text" /></p>
         <p>Strength: <input id="edit-strength" type="range" min="1" max="10" /></p>
+        <p>Color: <input id="edit-link-color" type="color" /></p>
         <p>Dashed: <input id="edit-link-dashed" type="checkbox" /></p>
         <p>Delete: <button id="delete-link">Delete link</button></p>
     </div>
@@ -116,27 +118,41 @@
     </div>
 </div>
 <script type="text/javascript">
-    var graph = {{ graph }};
+    var graph = {{ graph or inherited }};
 </script>
 <script src="/static/polycule.js" charset="utf-8"></script>
 <script src="/static/build.js" charset="utf-8"></script>
 
-<form action="/edit/save" method="post" class="wrapper flex" onsubmit="writeGraph();return true;">
-    <textarea name="graph" id="graph-field" class="hidden">{{ graph }}</textarea>
+<form action="{% if creating %}/save{% else %}/edit/save{% endif %}" method="post" class="wrapper flex" onsubmit="writeGraph();return true;">
+    <textarea name="graph" id="graph-field" class="hidden">{{ graph or inherited }}</textarea>
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
     <div class="form-group">
         <label for="id_view_pass">View Password</label>
         <input type="password" name="view_pass" id="id_view_pass" />
         <em>Optional</em>
-        <p class="help-block">Enter a password if you would like to restrict viewing of the polycule to only those who have the password. Leave blank to keep current setting</p>
-        <p><label for="id_remove_view_pass"><input type="checkbox" name="remove_view_pass" id="id_remove_view_pass" /> Remove view password?</label></p>
+        <p class="help-block">
+            Enter a password if you would like to restrict viewing of the polycule to only those who have the password. 
+            {% if creating %} No password makes the polycule public and inheritable.
+            {% else %} Leave blank to keep current setting
+            {% endif %}
+        </p>
+        {% if not creating %}
+            <p><label for="id_remove_view_pass"><input type="checkbox" name="remove_view_pass" id="id_remove_view_pass" /> Remove view password?</label></p>
+        {% endif %}
     </div>
     <div class="form-group">
         <label for="id_delete_pass">Edit Password</label>
         <input type="password" name="edit_pass" id="id_edit_pass" />
         <em>Optional</em>
-        <p class="help-block">Enter a password if you would like to be able to edit or delete the polycule in the future. Leave blank to keep current setting.</p>
-        <p><label for="id_remove_delete_pass"><input type="checkbox" name="remove_edit_pass" id="id_remove_edit_pass" /> Remove edit password?</label></p>
+        <p class="help-block">
+            Enter a password if you would like to be able to edit or delete the polycule in the future. 
+            {% if creating %} No password means you will not be able to edit or delete the polycule.
+            {% else %} Leave blank to keep current setting.
+            {% endif %}
+        </p>
+        {% if not creating %}
+            <p><label for="id_remove_delete_pass"><input type="checkbox" name="remove_edit_pass" id="id_remove_edit_pass" /> Remove edit password?</label></p>
+        {% endif %}
     </div>
     <button type="submit">Save</button>
 </form>

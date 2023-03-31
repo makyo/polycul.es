@@ -164,6 +164,11 @@ function restart() {
       if (d.dashed) {
         return '' + [d.strength / 1.5, d.strength / 1.5];
       }
+    })
+    .attr('style', function(d) {
+      if (d.color) {
+        return 'stroke:' + d.color + '!important';
+      }
     });
   pathG.append('text')
     .attr('class', 'center-text meaning hidden');
@@ -179,6 +184,11 @@ function restart() {
     .attr('stroke-dasharray', function(d) {
       if (d.dashed) {
         return '' + [d.strength / 1.5, d.strength / 1.5];
+      }
+    })
+    .attr('style', function(d) {
+      if (d.color) {
+        return 'stroke:' + d.color + '!important';
       }
     });
   path.select('.center-text')
@@ -209,8 +219,12 @@ function restart() {
     .attr('class', 'node')
     .attr('r', function(d) { return d.r; })
     .attr('style', function(d) {
+      // Set a different default color for dashed       
       if (d.dashed) {
-        return 'fill:#ccc!important';
+        d.color = d.color || "#ccc";
+      }
+      if (d.color) {
+        return 'fill:' + d.color + '!important';
       }
     })
     .attr('stroke-dasharray', function(d) {
@@ -230,8 +244,8 @@ function restart() {
   node.select('circle')
     .attr('r', function(d) { return d.r; })
     .attr('style', function(d) {
-      if (d.dashed) {
-        return 'fill:#ccc!important';
+      if (d.color) {
+        return 'fill:' + d.color + '!important';
       }
     })
     .attr('stroke-dasharray', function(d) {

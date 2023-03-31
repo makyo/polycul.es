@@ -41,6 +41,10 @@
         "dashed": {
           "type": "boolean",
           "optional": true
+        },
+        "color": {
+          "type": "string",
+          "optional": true
         }
       },
       "additionalProperties": false
@@ -84,6 +88,10 @@
             "optional": true
           },
           "centerText": {
+            "type": "string",
+            "optional": true
+          },
+          "color": {
             "type": "string",
             "optional": true
           },
