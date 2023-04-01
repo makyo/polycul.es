@@ -293,6 +293,9 @@ function editNode(d) {
       attachEvents();
       nodeMenu.style('display', 'none');
     });
+  
+  // Refresh the Coloris thumbnail
+  document.querySelector('#edit-node-color').dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function editLink(d) {
@@ -333,6 +336,7 @@ function editLink(d) {
       })[0].strength = this.value;
       restart();
     });
+  document.getElementById('edit-link-color').value = d.color || "rgba(0,0,0,0.25)";
   linkMenu.select('#edit-link-color')
     .property('value', d.color)
     .on('input', function() {
@@ -361,6 +365,9 @@ function editLink(d) {
       attachEvents();
       linkMenu.style('display', 'none');
     });
+  
+  // Refresh the Coloris thumbnail
+  document.querySelector('#edit-link-color').dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function addTemplate(template) {
@@ -379,6 +386,23 @@ function addTemplate(template) {
   restart();
   attachEvents();
 }
+
+
+// Initial Coloris config
+Coloris({
+  theme: 'polaroid',
+  formatToggle: true
+})
+// Remember previously used colors
+let swatches = new Set();  // Use a Set to prevent duplicates
+function addColor(event) {
+  swatches.add(event.target.value);
+  Coloris({
+    swatches: Array.from(swatches)
+  })
+}
+document.getElementById('edit-node-color').addEventListener('close', addColor);
+document.getElementById('edit-link-color').addEventListener('close', addColor);
 
 panel.on('mousedown', mousedown)
   .on('mousemove', mousemove)
