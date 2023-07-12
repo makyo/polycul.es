@@ -2,6 +2,8 @@
 
 {% block head %}
 <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<link rel="stylesheet" href="/static/vendor/coloris.min.css"/>
+<script src="/static/vendor/coloris.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -31,7 +33,7 @@
     <div id="node-menu" class="menu">
         <p>Name: <input type="text" id="edit-node-name" /></p>
         <p>Radius: <input type="range" min="2" max="20" id="edit-node-r" /></p>
-        <p>Color: <input id="edit-node-color" type="color" /></p>
+        <p>Color: <input type="text" id="edit-node-color" data-coloris></p>
         <p>Dashed: <input id="edit-node-dashed" type="checkbox" /></p>
         <p>Delete: <button id="delete-node">Delete node</button></p>
     </div>
@@ -40,7 +42,7 @@
         <p>Text near <span id="source-name"></span>: <input type="text" id="edit-source-text" /></p>
         <p>Text near <span id="target-name"></span>: <input type="text" id="edit-target-text" /></p>
         <p>Strength: <input id="edit-strength" type="range" min="1" max="10" /></p>
-        <p>Color: <input id="edit-link-color" type="color" /></p>
+        <p>Color: <input type="text" id="edit-link-color" data-coloris></p>
         <p>Dashed: <input id="edit-link-dashed" type="checkbox" /></p>
         <p>Delete: <button id="delete-link">Delete link</button></p>
     </div>
