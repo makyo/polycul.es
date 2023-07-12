@@ -19,6 +19,7 @@ from migrations import hashify
 from model import Polycule
 
 # Config
+IP = os.environ.get("ip", None)
 DATABASE = os.getenv('DATABASE', 'dev.db')
 DEBUG = True
 SECRET_KEY = os.getenv('SECRET_KEY', 'SET ME PLEASE')
@@ -54,7 +55,7 @@ def migrate():
             if migration_number <= current_migration:
                 print("migration {} already applied".format(migration_number))
                 continue
-            with open(os.path.join(migrations_dir, filename), "rb") as f:
+            with open(os.path.join(migrations_dir, filename), "r", encoding="utf-8") as f:
                 try:
                     db.cursor().executescript(f.read())
                 except Exception as e:
@@ -310,4 +311,5 @@ def export_png(polycule_id):
 
 if __name__ == "__main__":
     migrate()
-    app.run()
+
+    app.run(host=IP)
