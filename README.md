@@ -7,18 +7,31 @@
 Graphing polyamorous relationships with force directed layouts.
 
 ## Development
-
-You will need to install Python, virtualenv, and GraphViz using whatever package manager your operating system uses.  Then you can setup, run and test the application as follows:
+### Run locally
+You will need to install Python, virtualenv, libffi (for building cffi) and GraphViz using whatever package manager your operating system uses.  Then you can setup, run and test the application as follows:
 
 1. Create a new virtualenv environment by running `make`
 2. Run the application by running `make run` and opening http://localhost:5000/ in a browser
 3. Run the tests by running `make test`
 
-Alternatively, you can use Docker:
-
+### Run using Docker
 1. Build and run the image by using `docker-compose up --detach`
 2. Alternatively, you can use development mode by using `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`
 
+#### Logging
+The Dockerfile (as of writing) uses gunicorn, which doesn' show `print` output. The function below can be used as a replacement
+```python
+def log(message, path="log.txt"):
+    with open(path, "a+", encoding="utf-8") as file:
+        file.write("\n" + message)
+```
+
+## Environment variables
+|    Key     |  Default value  |
+| ---------- | --------------- |
+| ip         | `None`          |
+| DATABASE   | `dev.db`        |
+| SECRET_KEY | `SET ME PLEASE` |
 
 ## License
 This project is licensed under the [MIT License](LICENSE).

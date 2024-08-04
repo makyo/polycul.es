@@ -309,7 +309,12 @@ def export_png(polycule_id):
     return Response(png, mimetype="image/png")
 
 
-if __name__ == "__main__":
+
+run_directly = __name__ == "__main__"
+run_gunicorn = __name__ == "polycules"
+
+if run_directly or run_gunicorn:
     migrate()
 
-    app.run(host=IP)
+    if run_directly:
+        app.run(host=IP)
